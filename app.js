@@ -50,6 +50,9 @@ server.listen(appConfig.port);
 server.on('error', onError);
 server.on('listening', onListening);
 
+const socketLib = require("./App/libs/socketLib");
+const socketServer = socketLib.setServer(server);
+
 function onError(error) {
     if (error.syscall !== 'listen') {
       logger.captureError(error.code + 'not equal listen', 'serverOnErrorHandler', 10)
@@ -81,7 +84,7 @@ function onListening() {
       : 'port ' + addr.port;
     ('Listening on ' + bind);
     logger.captureInfo('server listening on port' + addr.port, 'serverOnListeningHandler', 10);
-    mongoose.connect(appConfig.db.uri, {useNewUrlParser: true});
+    mongoose.connect(appConfig.db.uri, {useNewUrlParser: true, useCreateIndex : true});
   }
   
   process.on('unhandledRejection', (reason, p) => {

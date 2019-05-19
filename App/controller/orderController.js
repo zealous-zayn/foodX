@@ -6,57 +6,53 @@ const check = require('../libs/checkLib');
 const time = require('../libs/timeLib');
 
 const OrderModel = mongoose.model('Order')
-const ProductModel = mongoose.model('Product')
+
 
 let createOrder = async (req, res) => {
+    let orders = JSON.parse(req.body.orderDetails)
     let orderDetails = await new Promise(async (resolve, reject) => {
+        try {
         let newOder = new OrderModel({
             order_id: shortId.generate(),
             customer_name: req.body.customerName,
-            order_detials: req.body.orderDetails,
+            order_detials: JSON.parse(req.body.orderDetails),
             total_cost: req.body.totalCost,
             created: time.now()
         })
 
         let order = await newOder.save()
-        try {
             resolve(order)
         } catch (err) {
             logger.captureError(err.message, 'orderController: createOrder', 10)
-            let apiResponse = response.generate(true, 'Failed To Update Details', 500, null)
+            let apiResponse = response.generate(true, 'Failed To Place Order please try again', 500, null)
             res.send(apiResponse)
         }
     })
 
-    let createTillNowUpdate = await new Promise(async (resolve, reject) => {
-        let successfulOrder = []
-        await orderDetails.order_detials.forEach(async (product) => {
-            await ProductModel.updateOne({ product_id: product.product_id }, { $inc: { created_till_now: product.quantity } })
-            try {
-                successfulOrder.push(product)
-            } catch (err) {
-                logger.captureError(err.message, 'orderController: createOrder', 10)
-                let apiResponse = response.generate(true, `Failed To Update Product Quantity for ${product.product_name}`, 500, null)
-                res.send(apiResponse)
-            }
-        });
-        try {
-            resolve(successfulOrder)
-        } catch (err) {
-            logger.captureError(err.message, 'orderController: createOrder', 10)
-            let apiResponse = response.generate(true, 'Failed To Update product quantity', 500, null)
-            res.send(apiResponse)
-        }
-
-    })
-    let responseData = {
-        order_id: orderDetails.order_id,
-        product_details: createTillNowUpdate
-    }
-    let apiResponse = await response.generate(false, "Order Created Successfully", 200, responseData)
+    let apiResponse = await response.generate(false, "Order Created Successfully", 200, orderDetails)
     await res.send(apiResponse)
 }
 
+let getOrders = async (req, res)=>{
+    let result = await OrderModel.find()
+    try{
+        if(check.isEmpty(result)){
+            logger.captureInfo('No Order Found', 'orderController: getOders')
+            let apiResponse = response.generate(true, 'No Order Found', 404, null)
+            res.send(apiResponse)
+        } else {
+            let apiResponse = response.generate(false, 'All Order Details', 200, result)
+            res.send(apiResponse)
+        }
+    } catch(err){
+        logger.captureError(err.message, 'orderController: getOrders', 10)
+        let apiResponse = response.generate(true, 'Failed To Get orders', 500, null)
+        res.send(apiResponse)
+    }
+}
+
+
 module.exports = {
-    createOrder : createOrder
+    createOrder : createOrder,
+    getOrders : getOrders
 }

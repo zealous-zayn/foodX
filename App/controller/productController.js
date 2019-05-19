@@ -6,6 +6,7 @@ const check = require('../libs/checkLib');
 const time = require('../libs/timeLib');
 
 const ProductModel = mongoose.model('Product')
+const OrderModel = mongoose.model('Order')
 
 let addProduct = async (req, res)=>{
     let newProduct = new ProductModel({
@@ -45,11 +46,11 @@ let getAllProduct = async (req, res)=>{
 }
 
 let predictionUpdate = async (req, res)=>{
-    await ProductModel.updateOne({product_id : req.body.id},{predicted : req.body.predictedValue})
+    await ProductModel.updateOne({product_id : req.body.id},{predicted : req.body.predictedValue,created_till_now:0})
     try{
         let apiResponse = response.generate(false, 'The predicted value updated successfully', 200, null)
         res.send(apiResponse)
-    } catch(err){
+    } catch(err){   
         logger.captureError(err.message, 'productController: predictionUpdate', 10)
         let apiResponse = response.generate(true, 'Failed To Update Details', 500, null)
         res.send(apiResponse)
@@ -57,9 +58,19 @@ let predictionUpdate = async (req, res)=>{
 }
 
 let doneProduct = async (req, res)=>{
-    await ProductModel.updateOne({ product_id: req.body.productId }, { $inc: { created_till_now: 1} })
+    let orderDone = await new Promise(async (resolve, reject)=>{
+        await OrderModel.updateOne({"order_id":req.body.orderId,"order_detials.product_id":req.body.productId},{$set:{"order_detials.$.status":true}})
+        try{
+            resolve({product_id:req.body.productId, quantity: req.body.quantity})
+        } catch(err){
+            logger.captureError(err.message, 'orderController: doneProduct', 10)
+            let apiResponse = response.generate(true, 'Failed To Update Order Status', 500, null)
+            res.send(apiResponse)
+        }
+    })
+    await ProductModel.updateOne({ product_id: orderDone.product_id }, { $inc: { created_till_now: orderDone.quantity} })
             try {
-                let apiResponse = response.generate(false, 'Added to Created till Date', 200, null)
+                let apiResponse = response.generate(false, 'Order Status Updated succesfully', 200, null)
                 res.send(apiResponse)
             } catch (err) {
                 logger.captureError(err.message, 'orderController: createOrder', 10)
