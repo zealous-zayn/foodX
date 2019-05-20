@@ -1,7 +1,7 @@
 const productController = require('./../controller/productController')
 
 module.exports.setRouter = (app)=>{
-    app.post('/get-all-products', productController.getAllProduct)
+    app.get('/get-all-products', productController.getAllProduct)
 
     app.post('/add-product', productController.addProduct)
 

@@ -28,7 +28,6 @@ let addProduct = async (req, res)=>{
 }
 
 let getAllProduct = async (req, res)=>{
-    console.log(req.headers)
     let result = await ProductModel.find()
     try{
         if (check.isEmpty(result)) {
