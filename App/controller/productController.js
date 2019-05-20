@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const shortId = require('shortid');
+const excel = require('exceljs');
+const tempFile = require('tempfile')
 const response = require('../libs/responseLib');
 const logger = require('../libs/loggerLib');
 const check = require('../libs/checkLib');
@@ -79,9 +81,37 @@ let doneProduct = async (req, res)=>{
             }
 }
 
+let createExcel = async(req, res) =>{
+    try{
+    let workbook = new excel.Workbook();
+    let sheet = workbook.addWorksheet('Sheet One');
+
+    let orderArray = JSON.parse(req.body.orderArr)
+    sheet.columns = [
+        { header: 'Dish Name', key: 'name', width: 10 },
+        { header: 'Produced', key: 'produced', width: 32 },
+        { header: 'Predicted', key: 'predict', width: 10 }
+    ];
+    orderArray.forEach(element => {
+        sheet.addRow({name: element.product_name, produced: element.createdTillNow, predict: element.predicted});
+    });
+
+    let tempFilePath = await tempFile(".xlsx")
+    await workbook.xlsx.writeFile(tempFilePath).then(()=>{
+        res.sendFile(tempFilePath)
+         } )
+} catch(err){
+    logger.captureError(err.message, 'orderController: createExcel', 10)
+    let apiResponse = response.generate(true, 'Failed To create File', 500, null)
+    res.send(apiResponse)
+}
+}
+
+
 module.exports = {
     addProduct : addProduct,
     getAllProduct : getAllProduct,
     predictionUpdate : predictionUpdate,
-    doneProduct : doneProduct
+    doneProduct : doneProduct,
+    createExcel : createExcel
 }

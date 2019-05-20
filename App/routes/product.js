@@ -8,4 +8,6 @@ module.exports.setRouter = (app)=>{
     app.put('/prdiction-update', productController.predictionUpdate)
 
     app.post('/done-product', productController.doneProduct)
+
+    app.post('/download-file', productController.createExcel)
 }
