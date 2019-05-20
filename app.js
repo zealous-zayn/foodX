@@ -9,6 +9,26 @@ const routeLoggerMiddleware = require('./App/middlewares/routeLogger');
 const globalErrorMiddleware  = require('./App/middlewares/appErrorHandler');
 const logger = require('./App/libs/loggerLib');
 
+var request = require("request");
+
+var options = { method: 'POST',
+  url: 'http://c2live-api.mysurveyhub.com/Live_1/v1/company/login',
+  headers: 
+   { 
+     'device-id': '2',
+     'Content-Type': 'application/x-www-form-urlencoded',
+     },
+  formData: 
+   { username: 'satyanarayan@markelytics.com',
+     password: '123456',
+     device_type: '1' } };
+
+request(options, function (error, response, body) {
+  if (error) throw new Error(error);
+
+  console.log(body);
+});
+
 const app = express();
 
 
@@ -41,7 +61,7 @@ fs.readdirSync(routePath).forEach(function (file) {
     }
   });
 
-app.use(globalErrorMiddleware.globalNotFoundHandler)
+// app.use(globalErrorMiddleware.globalNotFoundHandler)
 
   const server = http.createServer(app);
 // start listening to http server
