@@ -7,7 +7,8 @@ const orderSchema = new Schema({
     order_detials : [{
         product_id: {type: String, default:""},
         product_name: {type: String, default:""},
-        quantity: {type: String, default:""}
+        quantity: {type: String, default:""},
+        status : {type: Boolean, default: false},
     }],
     total_cost : {type: Number, default:0},
     created : {type: Date, default: Date.now()},
